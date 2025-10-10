@@ -32,6 +32,6 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ message: "File uploaded successfully!" });
 });
 
-app.listen(3000, () => {
+app.listen(4000, () => {
   console.log("Server running on port 3000");
 });
