@@ -1,34 +1,24 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 
 const app = express();
 
-// Resolve __dirname in ES module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// === Container upload folder ===
+const uploadDir = "/app/uploads"; // This maps to host folder
 
-// === Host Upload Folder (already created on Proxmox host) ===
-const uploadDir = "/home/skalelit/uploads/media-server/uploads";
-
-// === Multer Storage with 1GB limit ===
+// === Multer Storage ===
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir), // host path
+  destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname)),
 });
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 1 * 1024 * 1024 * 1024 },
-});
+const upload = multer({ storage });
 
 // === Serve Frontend ===
-app.use(express.static(path.join(__dirname, "web")));
+app.use(express.static(path.join(process.cwd(), "web")));
 
-// === Serve Uploads as Static ===
+// === Serve uploaded files ===
 app.use("/uploads", express.static(uploadDir));
 
 // === Upload Endpoint ===
@@ -45,51 +35,48 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 // === List Uploaded Files ===
 app.get("/list-uploads", (req, res) => {
-  fs.readdir(uploadDir, (err, files) => {
-    if (err)
-      return res.status(500).json({ message: "Cannot read uploads folder" });
-    const fileList = files.map((f) => ({
-      name: f,
-      url: `/uploads/${f}`,
-    }));
-    res.json(fileList);
+  import("fs").then((fs) => {
+    fs.readdir(uploadDir, (err, files) => {
+      if (err)
+        return res.status(500).json({ message: "Cannot read uploads folder" });
+      const fileList = files.map((f) => ({ name: f, url: `/uploads/${f}` }));
+      res.json(fileList);
+    });
   });
 });
 
-// === Simple HTML Page to View Uploads ===
+// === HTML Page to View Uploads ===
 app.get("/uploads-page", (req, res) => {
-  fs.readdir(uploadDir, (err, files) => {
-    if (err) return res.send("Cannot read uploads folder");
+  import("fs").then((fs) => {
+    fs.readdir(uploadDir, (err, files) => {
+      if (err) return res.send("Cannot read uploads folder");
 
-    const fileLinks = files
-      .map((f) => `<li><a href="/uploads/${f}" target="_blank">${f}</a></li>`)
-      .join("\n");
+      const fileLinks = files
+        .map((f) => `<li><a href="/uploads/${f}" target="_blank">${f}</a></li>`)
+        .join("\n");
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Uploaded Files</title>
-        </head>
-        <body>
-          <h1>Uploaded Files</h1>
-          <ul>
-            ${fileLinks}
-          </ul>
-          <a href="/">Go Back to Upload Form</a>
-        </body>
-      </html>
-    `);
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Uploaded Files</title></head>
+          <body>
+            <h1>Uploaded Files</h1>
+            <ul>${fileLinks}</ul>
+            <a href="/">Go Back to Upload Form</a>
+          </body>
+        </html>
+      `);
+    });
   });
 });
 
-// === Fallback Route for Frontend ===
+// === Frontend Fallback ===
 app.get(/^\/.*$/, (req, res) => {
-  res.sendFile(path.join(__dirname, "web/index.html"));
+  res.sendFile(path.join(process.cwd(), "web/index.html"));
 });
 
 // === Start Server ===
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`Server running on port ${PORT}`)
+);

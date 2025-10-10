@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE            = "media-server"
-        CONTAINER_NAME          = "media-server-container"
-        APP_PORT                = "4000"
-        HOST_UPLOAD_PATH        = "/home/skalelit/uploads/media-server/uploads"
-        CONTAINER_UPLOAD_PATH   = "/app/uploads"
+        DOCKER_IMAGE = "media-server"
+        CONTAINER_NAME = "media-server-container"
+        APP_PORT = "4000"
+        HOST_UPLOAD_PATH = "/home/skalelit/uploads/media-server/uploads"
+        CONTAINER_UPLOAD_PATH = "/app/uploads"
     }
 
     stages {

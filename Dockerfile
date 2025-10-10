@@ -1,6 +1,5 @@
 FROM node:18
 
-# Set working directory
 WORKDIR /app
 
 # Copy package.json and install dependencies
@@ -13,5 +12,5 @@ COPY . .
 # Expose port
 EXPOSE 4000
 
-# Start the server
+# Run Node.js app
 CMD ["node", "index.js"]
