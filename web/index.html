@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Upload</title>
+  </head>
+  <body>
+    <h1>Upload Media File</h1>
+
+    <input type="file" id="fileInput" />
+    <button onclick="uploadFile()">Upload</button>
+
+    <h2>Uploaded Files</h2>
+    <ul id="fileList"></ul>
+
+    <script>
+      const uploadFile = async () => {
+        const fileInput = document.getElementById("fileInput");
+        if (!fileInput.files.length) {
+          alert("Please select a file first!");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+          const response = await fetch("http://14.194.141.166:3000/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+          alert(result.message);
+          loadFiles();
+        } catch (err) {
+          console.error(err);
+          alert("Upload failed!");
+        }
+      };
+
+      const loadFiles = async () => {
+        const fileList = document.getElementById("fileList");
+        fileList.innerHTML = "";
+
+        try {
+          const response = await fetch("http://14.194.141.166:3000/uploads/");
+          const files = await response.json(); // if you want a JSON listing
+          // OR you can manually list if you know filenames
+        } catch (err) {
+          console.error(err);
+        }
+      };
+    </script>
+  </body>
+</html>
