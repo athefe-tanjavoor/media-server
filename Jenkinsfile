@@ -41,7 +41,7 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                sh """
+                sh '''
                 # Ensure uploads folder exists on host
                 mkdir -p $UPLOAD_PATH
                 chmod 755 $UPLOAD_PATH
@@ -53,34 +53,34 @@ pipeline {
                     -p $APP_PORT:$APP_PORT \
                     -v $UPLOAD_PATH:/app/uploads \
                     $DOCKER_IMAGE
-                """
+                '''
             }
         }
 
         stage('Health Check') {
             steps {
-                sh """
+                sh '''
                 echo "Checking if container is running..."
                 retries=5
-                until [ "\$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ] || [ \$retries -le 0 ]; do
+                until [ "$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ] || [ $retries -le 0 ]; do
                     echo "Waiting for container to start..."
                     sleep 5
-                    retries=\$((retries-1))
+                    retries=$((retries-1))
                 done
 
-                if [ \$retries -le 0 ]; then
+                if [ $retries -le 0 ]; then
                     echo "❌ Container failed to start!"
                     docker logs $CONTAINER_NAME
                     exit 1
                 fi
                 echo "✅ Container is running."
-                """
+                '''
             }
         }
 
         stage('Verify Uploads Folder') {
             steps {
-                sh """
+                sh '''
                 echo "Verifying uploads folder on host..."
                 if [ -d "$UPLOAD_PATH" ]; then
                     echo "✅ Uploads folder exists at $UPLOAD_PATH"
@@ -92,13 +92,13 @@ pipeline {
                 # Check if folder is writable
                 testfile="$UPLOAD_PATH/test_write_$(date +%s).tmp"
                 touch "$testfile" && rm "$testfile"
-                if [ \$? -eq 0 ]; then
+                if [ $? -eq 0 ]; then
                     echo "✅ Uploads folder is writable"
                 else
                     echo "❌ Uploads folder is NOT writable!"
                     exit 1
                 fi
-                """
+                '''
             }
         }
     }
