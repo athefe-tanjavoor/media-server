@@ -1,15 +1,8 @@
-FROM node:18-alpine
-
+# Dockerfile
+FROM node:18
 WORKDIR /app
-
-# Copy package files and install deps
 COPY package*.json ./
 RUN npm install
-
-# Copy backend and frontend
-COPY api ./api
-COPY web ./web
-
+COPY . .
 EXPOSE 4000
-
 CMD ["node", "api/index.js"]
