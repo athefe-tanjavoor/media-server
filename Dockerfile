@@ -3,18 +3,18 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package.json and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy app files
+# Copy all project files
 COPY . .
 
-# Create uploads directory
+# Ensure uploads folder exists
 RUN mkdir -p uploads
 
 # Expose port
 EXPOSE 4000
 
-# Start server
+# Start the server
 CMD ["node", "index.js"]
