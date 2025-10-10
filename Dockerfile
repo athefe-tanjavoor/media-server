@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy all project files
+# Copy project files
 COPY . .
 
 # Ensure uploads folder exists
