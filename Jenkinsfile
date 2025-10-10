@@ -45,7 +45,6 @@ pipeline {
                 sh """
                 echo "Ensuring uploads folder exists on host..."
                 mkdir -p $HOST_UPLOAD_PATH
-                chmod -R 775 $HOST_UPLOAD_PATH
                 """
             }
         }
