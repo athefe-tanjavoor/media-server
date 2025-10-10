@@ -49,6 +49,7 @@ pipeline {
                     --restart always \
                     -p $APP_PORT:$APP_PORT \
                     -v $HOST_UPLOAD_PATH:$CONTAINER_UPLOAD_PATH \
+                    --user 1000:1000 \
                     $DOCKER_IMAGE
                 """
             }
