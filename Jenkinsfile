@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE   = "media-server"
-        CONTAINER_NAME = "media-server-container"
-        APP_PORT       = "4000"
-        HOST_UPLOAD_PATH = "/home/skalelit/uploads/media-server/uploads"
-        CONTAINER_UPLOAD_PATH = "/app/uploads"
+        DOCKER_IMAGE            = "media-server"
+        CONTAINER_NAME          = "media-server-container"
+        APP_PORT                = "4000"
+        HOST_UPLOAD_PATH        = "/home/skalelit/uploads/media-server/uploads"
+        CONTAINER_UPLOAD_PATH   = "/app/uploads"
     }
 
     stages {
@@ -72,20 +72,6 @@ pipeline {
                     exit 1
                 fi
                 echo "✅ Container is running."
-                """
-            }
-        }
-
-        stage('Verify Upload Folder') {
-            steps {
-                sh """
-                echo "Verifying uploads folder..."
-                if [ -d "$HOST_UPLOAD_PATH" ]; then
-                    echo "✅ Uploads folder exists on host."
-                else
-                    echo "❌ Uploads folder does NOT exist!"
-                    exit 1
-                fi
                 """
             }
         }
