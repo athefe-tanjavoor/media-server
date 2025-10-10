@@ -4,16 +4,9 @@
   "description": "A simple media server using Express",
   "main": "index.js",
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "nodemon api/index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "keywords": [
-    "media",
-    "server",
-    "express"
-  ],
-  "author": "Your Name",
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
