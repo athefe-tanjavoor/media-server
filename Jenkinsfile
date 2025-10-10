@@ -24,7 +24,7 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                sh 'docker run -d --name media-server -p 4000:4000 media-server'
+                sh 'docker run -d --name media-server --restart always -p 4000:4000 media-server'
             }
         }
     }
