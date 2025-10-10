@@ -5,8 +5,8 @@ pipeline {
         DOCKER_IMAGE   = "media-server"
         CONTAINER_NAME = "media-server-container"
         APP_PORT       = "4000"
-        HOST_UPLOAD_PATH = "/home/skalelit/uploads/media-server/uploads" // Proxmox host path
-        CONTAINER_UPLOAD_PATH = "/app/uploads" // Inside container
+        HOST_UPLOAD_PATH = "/home/skalelit/uploads/media-server/uploads"
+        CONTAINER_UPLOAD_PATH = "/app/uploads"
     }
 
     stages {
@@ -40,17 +40,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Host Upload Folder') {
-            steps {
-                sh """
-                echo "Ensuring uploads folder exists on host..."
-                sudo mkdir -p $HOST_UPLOAD_PATH
-                sudo chown -R 1000:1000 $HOST_UPLOAD_PATH
-                sudo chmod -R 775 $HOST_UPLOAD_PATH
-                """
-            }
-        }
-
         stage('Run Container') {
             steps {
                 sh """
@@ -60,7 +49,6 @@ pipeline {
                     --restart always \
                     -p $APP_PORT:$APP_PORT \
                     -v $HOST_UPLOAD_PATH:$CONTAINER_UPLOAD_PATH \
-                    --user root \
                     $DOCKER_IMAGE
                 """
             }
