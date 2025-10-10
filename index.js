@@ -4,16 +4,24 @@ import path from "path";
 
 const app = express();
 
-// === Container upload folder ===
-const uploadDir = "/app/uploads"; // This maps to host folder
+// Increase JSON & URL-encoded payload limits (not critical for files but good)
+app.use(express.json({ limit: "2gb" }));
+app.use(express.urlencoded({ limit: "2gb", extended: true }));
 
-// === Multer Storage ===
+// === Container upload folder ===
+const uploadDir = "/app/uploads"; // Mounted host folder
+
+// === Multer Storage with file size limit ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname)),
 });
-const upload = multer({ storage });
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB max
+});
 
 // === Serve Frontend ===
 app.use(express.static(path.join(process.cwd(), "web")));
