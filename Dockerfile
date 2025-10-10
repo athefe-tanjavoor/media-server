@@ -1,20 +1,15 @@
-# Use Node.js LTS image
-FROM node:20
+FROM node:18-alpine
 
-# Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package.json first for caching
+# Copy package files and install deps
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy app files
-COPY . .
+# Copy backend and frontend
+COPY api ./api
+COPY web ./web
 
-# Expose port
 EXPOSE 4000
 
-# Start app directly
-CMD ["node", "index.js"]
+CMD ["node", "api/index.js"]
