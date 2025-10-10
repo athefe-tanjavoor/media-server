@@ -5,7 +5,8 @@ pipeline {
         DOCKER_IMAGE   = "media-server"
         CONTAINER_NAME = "media-server-container"
         APP_PORT       = "4000"
-        UPLOAD_PATH    = "/home/skalelit/uploads/media-server/uploads"
+        HOST_UPLOAD_PATH = "/home/skalelit/uploads/media-server/uploads" // Proxmox host path
+        CONTAINER_UPLOAD_PATH = "/app/uploads" // Inside container
     }
 
     stages {
@@ -39,63 +40,64 @@ pipeline {
             }
         }
 
+        stage('Prepare Host Upload Folder') {
+            steps {
+                sh """
+                echo "Ensuring uploads folder exists on host..."
+                sudo mkdir -p $HOST_UPLOAD_PATH
+                sudo chown -R 1000:1000 $HOST_UPLOAD_PATH
+                sudo chmod -R 775 $HOST_UPLOAD_PATH
+                """
+            }
+        }
+
         stage('Run Container') {
             steps {
-                sh '''
-                # Run container with host uploads path mounted
+                sh """
+                echo "Running new container..."
                 docker run -d \
                     --name $CONTAINER_NAME \
                     --restart always \
                     -p $APP_PORT:$APP_PORT \
-                    -v $UPLOAD_PATH:/app/uploads \
-                    --user $(id -u):$(id -g) \
+                    -v $HOST_UPLOAD_PATH:$CONTAINER_UPLOAD_PATH \
+                    --user root \
                     $DOCKER_IMAGE
-                '''
+                """
             }
         }
 
         stage('Health Check') {
             steps {
-                sh '''
+                sh """
                 echo "Checking if container is running..."
                 retries=5
-                until [ "$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ] || [ $retries -le 0 ]; do
+                until [ "\$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ] || [ \$retries -le 0 ]; do
                     echo "Waiting for container to start..."
                     sleep 5
-                    retries=$((retries-1))
+                    retries=\$((retries-1))
                 done
 
-                if [ $retries -le 0 ]; then
+                if [ \$retries -le 0 ]; then
                     echo "❌ Container failed to start!"
                     docker logs $CONTAINER_NAME
                     exit 1
                 fi
                 echo "✅ Container is running."
-                '''
+                """
             }
         }
 
-        stage('Verify Uploads Folder') {
+        stage('Verify Upload Folder') {
             steps {
-                sh '''
-                echo "Verifying uploads folder on host..."
-                if [ -d "$UPLOAD_PATH" ]; then
-                    echo "✅ Uploads folder exists at $UPLOAD_PATH"
+                sh """
+                echo "Verifying uploads folder..."
+                if [ -d "$HOST_UPLOAD_PATH" ]; then
+                    echo "✅ Uploads folder exists on host."
                 else
-                    echo "❌ Uploads folder does NOT exist! Please create it manually with correct permissions."
+                    echo "❌ Uploads folder does NOT exist!"
                     exit 1
                 fi
-
-                # Check if folder is writable
-                testfile="$UPLOAD_PATH/test_write_$(date +%s).tmp"
-                touch "$testfile" && rm "$testfile"
-                if [ $? -eq 0 ]; then
-                    echo "✅ Uploads folder is writable"
-                else
-                    echo "❌ Uploads folder is NOT writable! Adjust permissions manually."
-                    exit 1
-                fi
-                '''
+                """
             }
         }
     }
