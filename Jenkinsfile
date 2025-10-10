@@ -42,16 +42,13 @@ pipeline {
         stage('Run Container') {
             steps {
                 sh '''
-                # Ensure uploads folder exists on host
-                mkdir -p $UPLOAD_PATH
-                chmod 755 $UPLOAD_PATH
-
                 # Run container with host uploads path mounted
                 docker run -d \
                     --name $CONTAINER_NAME \
                     --restart always \
                     -p $APP_PORT:$APP_PORT \
                     -v $UPLOAD_PATH:/app/uploads \
+                    --user $(id -u):$(id -g) \
                     $DOCKER_IMAGE
                 '''
             }
@@ -85,7 +82,7 @@ pipeline {
                 if [ -d "$UPLOAD_PATH" ]; then
                     echo "✅ Uploads folder exists at $UPLOAD_PATH"
                 else
-                    echo "❌ Uploads folder does NOT exist!"
+                    echo "❌ Uploads folder does NOT exist! Please create it manually with correct permissions."
                     exit 1
                 fi
 
@@ -95,7 +92,7 @@ pipeline {
                 if [ $? -eq 0 ]; then
                     echo "✅ Uploads folder is writable"
                 else
-                    echo "❌ Uploads folder is NOT writable!"
+                    echo "❌ Uploads folder is NOT writable! Adjust permissions manually."
                     exit 1
                 fi
                 '''
