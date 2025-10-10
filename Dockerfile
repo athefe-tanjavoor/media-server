@@ -10,8 +10,11 @@ RUN npm install
 # Copy app files
 COPY . .
 
+# Create uploads directory
+RUN mkdir -p uploads
+
 # Expose port
 EXPOSE 4000
 
-# Start app
+# Start server
 CMD ["node", "index.js"]
