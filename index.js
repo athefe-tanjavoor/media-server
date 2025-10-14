@@ -22,7 +22,6 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4GB per file
-  // Accept all file types
 });
 
 // === Serve frontend static files if any ===
@@ -34,7 +33,7 @@ app.use("/uploads", express.static(uploadDir));
 // === Upload Endpoint (Multiple Files) ===
 app.post("/upload", upload.array("files", 50), (req, res) => {
   if (!req.files || req.files.length === 0)
-    return res.status(400).json({ message: "No files uploaded" });
+    return res.status(400).send("No files uploaded");
 
   const uploadedFiles = req.files.map((file) => ({
     filename: file.filename,
@@ -42,10 +41,80 @@ app.post("/upload", upload.array("files", 50), (req, res) => {
     url: `/uploads/${file.filename}`,
   }));
 
-  res.json({
-    message: "Files uploaded successfully!",
-    files: uploadedFiles,
-  });
+  // ✅ Send success HTML page
+  const fileListHtml = uploadedFiles
+    .map(
+      (file) => `
+        <div class="file-card">
+          <div class="file-icon">📄</div>
+          <div class="file-name">${file.filename}</div>
+          <a href="${file.url}" target="_blank" class="download-btn">Download</a>
+        </div>
+      `
+    )
+    .join("");
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Upload Successful</title>
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+          text-align: center;
+          padding: 40px;
+        }
+        h1 { color: #333; text-shadow: 1px 1px 2px #fff; }
+        .file-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 20px;
+          margin-top: 30px;
+        }
+        .file-card {
+          background: white;
+          padding: 15px;
+          border-radius: 12px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .file-icon { font-size: 40px; }
+        .file-name { margin: 8px 0; color: #333; font-weight: 500; }
+        .download-btn {
+          display: inline-block;
+          background: #4a90e2;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+          text-decoration: none;
+          font-size: 13px;
+        }
+        .download-btn:hover { background: #357ABD; }
+        a.view-btn {
+          display: inline-block;
+          margin-top: 30px;
+          color: #4a90e2;
+          font-weight: bold;
+          text-decoration: none;
+        }
+        a.view-btn:hover { text-decoration: underline; }
+      </style>
+      <script>
+        // Optional: auto redirect to /uploads-page after 3 seconds
+        setTimeout(() => {
+          window.location.href = "/uploads-page";
+        }, 3000);
+      </script>
+    </head>
+    <body>
+      <h1>✅ Files Uploaded Successfully!</h1>
+      <div class="file-list">${fileListHtml}</div>
+      <a href="/uploads-page" class="view-btn">📂 View All Uploaded Files</a>
+    </body>
+    </html>
+  `);
 });
 
 // === List Uploaded Files (JSON API) ===
@@ -112,9 +181,7 @@ app.get("/uploads-page", (req, res) => {
       </head>
       <body>
         <h1>Uploaded Files</h1>
-        <div class="container">
-          <div class="grid">${fileCards}</div>
-        </div>
+        <div class="container"><div class="grid">${fileCards}</div></div>
         <a class="back-btn" href="/">⬅ Back to Upload Form</a>
         <footer>© 2025 Media Server | Rankraze</footer>
       </body>
