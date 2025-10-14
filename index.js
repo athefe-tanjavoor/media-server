@@ -16,16 +16,16 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 // === Multer Storage ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname), // preserve name
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4GB max per file
-  // no fileFilter => accept any file type
+  limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4GB per file
+  // Accept all file types
 });
 
-// === Serve frontend static files if you have any ===
+// === Serve frontend static files if any ===
 app.use(express.static(path.join(process.cwd(), "web")));
 
 // === Serve uploaded files ===
@@ -65,7 +65,7 @@ app.get("/uploads-page", (req, res) => {
 
     const fileCards = files
       .map((f) => {
-        let icon = "📄"; // default
+        let icon = "📄";
         if (f.endsWith(".mp3")) icon = "🎵";
         else if (f.endsWith(".mp4")) icon = "📹";
         else if (
@@ -95,88 +95,25 @@ app.get("/uploads-page", (req, res) => {
         <meta charset="UTF-8" />
         <title>Uploaded Files - Media Server</title>
         <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
-            margin: 0;
-            padding: 20px;
-          }
-          h1 {
-            text-align: center;
-            color: #333;
-            text-shadow: 1px 1px 2px #fff;
-            margin-bottom: 30px;
-          }
-          .container {
-            max-width: 1000px;
-            margin: 0 auto;
-          }
-          .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-          }
-          .file-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s ease;
-          }
-          .file-card:hover {
-            transform: translateY(-5px);
-          }
-          .file-icon {
-            font-size: 50px;
-            color: #4a90e2;
-            margin-bottom: 10px;
-          }
-          .file-name {
-            font-size: 14px;
-            color: #333;
-            word-break: break-word;
-            margin-bottom: 8px;
-          }
-          .download-btn {
-            display: inline-block;
-            background-color: #4a90e2;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: background-color 0.3s;
-          }
-          .download-btn:hover {
-            background-color: #357ABD;
-          }
-          a.back-btn {
-            display: block;
-            text-align: center;
-            margin: 30px auto 10px;
-            color: #4a90e2;
-            text-decoration: none;
-            font-weight: bold;
-          }
-          a.back-btn:hover {
-            text-decoration: underline;
-          }
-          footer {
-            text-align: center;
-            font-size: 13px;
-            color: #333;
-            opacity: 0.8;
-            margin-top: 40px;
-          }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #74ebd5, #ACB6E5); margin:0; padding:20px; }
+          h1 { text-align:center; color:#333; text-shadow:1px 1px 2px #fff; margin-bottom:30px; }
+          .container { max-width:1000px; margin:0 auto; }
+          .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:20px; }
+          .file-card { background:white; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.15); padding:15px; text-align:center; transition: transform 0.2s ease; }
+          .file-card:hover { transform:translateY(-5px); }
+          .file-icon { font-size:50px; color:#4a90e2; margin-bottom:10px; }
+          .file-name { font-size:14px; color:#333; word-break:break-word; margin-bottom:8px; }
+          .download-btn { display:inline-block; background-color:#4a90e2; color:white; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:13px; transition: background-color 0.3s; }
+          .download-btn:hover { background-color:#357ABD; }
+          a.back-btn { display:block; text-align:center; margin:30px auto 10px; color:#4a90e2; text-decoration:none; font-weight:bold; }
+          a.back-btn:hover { text-decoration:underline; }
+          footer { text-align:center; font-size:13px; color:#333; opacity:0.8; margin-top:40px; }
         </style>
       </head>
       <body>
         <h1>Uploaded Files</h1>
         <div class="container">
-          <div class="grid">
-            ${fileCards}
-          </div>
+          <div class="grid">${fileCards}</div>
         </div>
         <a class="back-btn" href="/">⬅ Back to Upload Form</a>
         <footer>© 2025 Media Server | Rankraze</footer>
