@@ -12,6 +12,9 @@ app.use(express.urlencoded({ limit: "2gb", extended: true }));
 // === Container upload folder ===
 const uploadDir = "/app/uploads"; // Mounted host folder
 
+// Ensure upload folder exists
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 // === Multer Storage with file size limit ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
