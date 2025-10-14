@@ -6,34 +6,33 @@ import fs from "fs";
 const app = express();
 
 // Increase JSON & URL-encoded payload limits
-app.use(express.json({ limit: "2gb" }));
-app.use(express.urlencoded({ limit: "2gb", extended: true }));
+app.use(express.json({ limit: "4gb" }));
+app.use(express.urlencoded({ limit: "4gb", extended: true }));
 
-// === Container upload folder ===
+// === Upload folder ===
 const uploadDir = "/app/uploads"; // Mounted host folder
-
-// Ensure upload folder exists
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// === Multer Storage with file size limit ===
+// === Multer Storage ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname), // preserve name
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB max per file
+  limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4GB max per file
+  // no fileFilter => accept any file type
 });
 
-// === Serve Frontend ===
+// === Serve frontend static files if you have any ===
 app.use(express.static(path.join(process.cwd(), "web")));
 
 // === Serve uploaded files ===
 app.use("/uploads", express.static(uploadDir));
 
 // === Upload Endpoint (Multiple Files) ===
-app.post("/upload", upload.array("files", 10), (req, res) => {
+app.post("/upload", upload.array("files", 50), (req, res) => {
   if (!req.files || req.files.length === 0)
     return res.status(400).json({ message: "No files uploaded" });
 
@@ -44,7 +43,7 @@ app.post("/upload", upload.array("files", 10), (req, res) => {
   }));
 
   res.json({
-    message: "Files uploaded successfully and stored on Proxmox!",
+    message: "Files uploaded successfully!",
     files: uploadedFiles,
   });
 });
@@ -75,6 +74,9 @@ app.get("/uploads-page", (req, res) => {
           f.endsWith(".jpeg")
         )
           icon = "🖼️";
+        else if (f.endsWith(".exe")) icon = "💻";
+        else if (f.endsWith(".msi")) icon = "⚙️";
+        else if (f.endsWith(".zip") || f.endsWith(".rar")) icon = "🗜️";
 
         return `
           <div class="file-card">
