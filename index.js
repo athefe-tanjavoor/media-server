@@ -5,15 +5,12 @@ import fs from "fs";
 
 const app = express();
 
-// Increase JSON & URL-encoded payload limits
 app.use(express.json({ limit: "4gb" }));
 app.use(express.urlencoded({ limit: "4gb", extended: true }));
 
-// === Upload folder ===
-const uploadDir = "/app/uploads"; // Mounted host folder
+const uploadDir = "/app/uploads";
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// === Multer Storage ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
@@ -21,16 +18,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4GB per file
+  limits: { fileSize: 4 * 1024 * 1024 * 1024 },
 });
 
-// === Serve frontend static files if any ===
 app.use(express.static(path.join(process.cwd(), "web")));
 
-// === Serve uploaded files ===
 app.use("/uploads", express.static(uploadDir));
 
-// === Upload Endpoint (Multiple Files) ===
 app.post("/upload", upload.array("files", 50), (req, res) => {
   if (!req.files || req.files.length === 0)
     return res.status(400).send("No files uploaded");
@@ -41,7 +35,6 @@ app.post("/upload", upload.array("files", 50), (req, res) => {
     url: `/uploads/${file.filename}`,
   }));
 
-  // ✅ Send success HTML page
   const fileListHtml = uploadedFiles
     .map(
       (file) => `
@@ -117,7 +110,6 @@ app.post("/upload", upload.array("files", 50), (req, res) => {
   `);
 });
 
-// === List Uploaded Files (JSON API) ===
 app.get("/list-uploads", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err)
@@ -127,7 +119,6 @@ app.get("/list-uploads", (req, res) => {
   });
 });
 
-// === HTML Page to View Uploaded Files ===
 app.get("/uploads-page", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) return res.send("Cannot read uploads folder");
@@ -190,12 +181,10 @@ app.get("/uploads-page", (req, res) => {
   });
 });
 
-// === Frontend Fallback ===
 app.get(/^\/.*$/, (req, res) => {
   res.sendFile(path.join(process.cwd(), "web/index.html"));
 });
 
-// === Start Server ===
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on port ${PORT}`)
