@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE            = "media-server"
         CONTAINER_NAME          = "media-server-container"
         APP_PORT                = "4000"
-        HOST_UPLOAD_PATH        = "/home/skalelit/uploads/media-server/uploads"
+        HOST_UPLOAD_PATH        = "/home/rankraze-backup/uploads/media-server/uploads"
         CONTAINER_UPLOAD_PATH   = "/app/uploads"
     }
 
@@ -45,6 +45,9 @@ pipeline {
                 sh """
                 echo "Ensuring uploads folder exists on host..."
                 mkdir -p $HOST_UPLOAD_PATH
+                # Set ownership so Jenkins user can write
+                sudo chown -R \$(whoami):\$(whoami) $(dirname $HOST_UPLOAD_PATH)
+                chmod -R 755 $(dirname $HOST_UPLOAD_PATH)
                 """
             }
         }

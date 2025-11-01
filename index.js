@@ -5,26 +5,38 @@ import fs from "fs";
 
 const app = express();
 
-app.use(express.json({ limit: "4gb" }));
-app.use(express.urlencoded({ limit: "4gb", extended: true }));
+// Set JSON & URL-encoded body parser limits to 100 GB
+app.use(express.json({ limit: "100gb" }));
+app.use(express.urlencoded({ limit: "100gb", extended: true }));
+
+// Optional: Increase request timeout to 24 hours for very large uploads
+app.use((req, res, next) => {
+  req.setTimeout(24 * 60 * 60 * 1000); // 24 hours
+  next();
+});
 
 const uploadDir = "/app/uploads";
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+// Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 
+// Multer upload with 100 GB file size limit
 const upload = multer({
   storage,
-  limits: { fileSize: 4 * 1024 * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 * 1024 }, // 100 GB
 });
 
+// Serve static files for your frontend
 app.use(express.static(path.join(process.cwd(), "web")));
 
+// Serve uploaded files
 app.use("/uploads", express.static(uploadDir));
 
+// File upload endpoint
 app.post("/upload", upload.array("files", 50), (req, res) => {
   if (!req.files || req.files.length === 0)
     return res.status(400).send("No files uploaded");
@@ -95,7 +107,6 @@ app.post("/upload", upload.array("files", 50), (req, res) => {
         a.view-btn:hover { text-decoration: underline; }
       </style>
       <script>
-        // Optional: auto redirect to /uploads-page after 3 seconds
         setTimeout(() => {
           window.location.href = "/uploads-page";
         }, 3000);
@@ -110,6 +121,7 @@ app.post("/upload", upload.array("files", 50), (req, res) => {
   `);
 });
 
+// API to list uploads as JSON
 app.get("/list-uploads", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err)
@@ -119,6 +131,7 @@ app.get("/list-uploads", (req, res) => {
   });
 });
 
+// Web page to view all uploads
 app.get("/uploads-page", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) return res.send("Cannot read uploads folder");
@@ -181,10 +194,12 @@ app.get("/uploads-page", (req, res) => {
   });
 });
 
+// Catch-all route to serve index.html
 app.get(/^\/.*$/, (req, res) => {
   res.sendFile(path.join(process.cwd(), "web/index.html"));
 });
 
+// Start server
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on port ${PORT}`)
